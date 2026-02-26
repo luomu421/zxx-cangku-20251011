@@ -1,0 +1,174 @@
+/* 全局样式重置 */
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+    background-color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#game-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#message{
+    text-align: center;
+}
+header {
+    border-bottom: 1px solid #d3d6da;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    letter-spacing: 0.2rem;
+    margin: 10px 0;
+}
+
+/* 重新开始按钮 */
+#restart-btn,#answer-btn{
+  margin: 10px 0 14px;
+  padding: 8px 14px;
+  border: 1px solid #000000;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#restart-btn:hover,#answer-btn:hover {
+  background: #f6f7f8;
+  box-shadow: 0 0 3px black;
+}
+
+#restart-btn:active,#answer-btn:active {
+  background: #f6f7f8;
+  box-shadow: 0 0 0 black;
+}
+
+/* 网格布局：6行5列 */
+#board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 5px;
+    padding: 10px;
+}
+
+/* 单个格子样式 */
+.cell {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #d3d6da;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    text-transform: lowercase;
+    transition: all 0.1s ease;
+    box-sizing: border-box;
+    border-radius: 5px;
+}
+
+/* 当格子内有字母但未提交时的边框颜色 */
+.cell:not(:empty) {
+    border-color: #878a8c;
+}
+
+/* 根据 data-color 上色 */
+.cell[data-color="g"] {
+  background: #787c7e; /* 灰 */
+  border-color: #787c7e;
+  color: #fff;
+}
+
+.cell[data-color="y"] {
+  background: #c9b458; /* 黄 */
+  border-color: #c9b458;
+  color: #fff;
+}
+
+.cell[data-color="b"] {
+  background: #6aaa64; /* 绿（这里用 b 表示 green） */
+  border-color: #6aaa64;
+  color: #fff;
+}
+
+.key[data-color="g"] {
+  background: #787c7e; /* 灰 */
+  border-color: #787c7e;
+  color: #fff;
+}
+
+.key[data-color="y"] {
+  background: #c9b458; /* 黄 */
+  border-color: #c9b458;
+  color: #fff;
+}
+
+.key[data-color="b"] {
+  background: #6aaa64; /* 绿（这里用 b 表示 green） */
+  border-color: #6aaa64;
+  color: #fff;
+}
+
+/* 适配移动端 */
+@media (max-width: 400px) {
+    .cell {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
+
+/*虚拟键盘*/
+#keyboard{                                  
+    background-color: rgb(255, 255, 255);
+    border: 3px solid black;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    width: 652px;
+    
+    border-radius: 10px;
+   position: absolute;
+    bottom: 100px;
+    left:550px;
+    box-shadow: 0 0 10px black;
+}
+#enter{
+    width: 50px;
+}
+
+#none2{
+    height: 50px;
+    width: 40px;
+}
+#backspace{
+    width:110px ;
+}
+.key{
+    width: 50px;
+    height: 50px;
+    background-color: rgb(255, 255, 255);
+    border: 3px solid black;
+    border-radius: 5px;
+    margin: 4px;
+    transition: 0.1s;
+    text-align: center;
+    vertical-align: middle;
+    box-shadow: 0 0 5px rgb(0, 0, 0);
+    cursor: pointer;
+}
+.key:active{
+    box-shadow: 0 0 0 rgb(0, 0, 0);
+    
+}
