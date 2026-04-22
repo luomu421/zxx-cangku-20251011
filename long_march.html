@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>红军长征·伟大征程 | 交互式地图（标签独立坐标）</title>
+    <title>红军长征·伟大征程</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none; /* 避免移动端长按菜单，不影响交互 */
+            user-select: none; 
         }
 
         body {
@@ -183,11 +183,11 @@
             box-shadow: 0 0 0 3px #ffd966;
         }
 
-        /* 地名标签样式 - 完全独立坐标，不可点击，背景透明度提高（更透明） */
+        
         .node-label {
             position: absolute;
             white-space: nowrap;
-            background: rgba(30, 20, 12, 0.55);   /* 提高透明度：从0.85降至0.55，更透地图背景 */
+            background: rgba(30, 20, 12, 0.55);   
             backdrop-filter: blur(4px);
             color: #fef3d6;
             font-size: 12px;
@@ -197,12 +197,12 @@
             border-left: 3px solid #f3bc6c;
             letter-spacing: 0.5px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            pointer-events: none;   /* 完全不可点击，避免干扰节点交互 */
+            pointer-events: none;  
             font-family: 'Inter', system-ui, sans-serif;
             z-index: 13;
             transition: none;
         }
-        /* 针对三个特定标签：将左侧橙色竖线改为右侧 */
+       
         .node-label-right-accent {
             border-left: none !important;
             border-right: 3px solid #f3bc6c !important;
@@ -422,12 +422,12 @@
     <header class="hero">
         <h1>红军长征 · 伟大征程</h1>
         <p>1934年10月 — 1936年10月</p>
-        <p class="sub">🟢 绿色旗帜(起点) | ⭐ 金色五角星(会师) | 🔴 红色圆点(事件) | 🏷️ 地名标签独立坐标（可任意调节）</p>
+        <p class="sub">🟢 绿色旗帜(起点) | ⭐ 金色五角星(会师) | 🔴 红色圆点(重要事件)</p>
     </header>
 
     <div class="dual-layout">
         <div class="fullmap-container">
-            <div class="map-title">红军长征路线图 · 可拖拽缩放 | 每个地名标签均使用独立绝对坐标（labelX, labelY）</div>
+            <div class="map-title">红军长征路线图 （labelX, labelY）</div>
             <div id="mapViewport" class="map-viewport">
                 <div id="mapTransform" class="map-transform">
                     <img id="mapBg" class="map-bg" src="https://ts1.tc.mm.bing.net/th/id/R-C.36a6785e14890836d72f0c1ed4a854b5?rik=c%2f0tWrOG2MsYXA&riu=http%3a%2f%2fpic.shbdl.com%2fuploads%2fallimg%2f250226%2f1-2502260T635151.jpg&ehk=ERHAtedNr5vdPx2JEvLVnQ7ZTv8sx%2fviEbWBh2%2bSBSM%3d&risl=&pid=ImgRaw&r=0" alt="长征地图背景" crossorigin="anonymous">
@@ -436,7 +436,7 @@
                     
                     <div id="nodesContainer" class="nodes-container"></div>
                 </div>
-                <div class="zoom-tip">✋ 单指拖拽 | 🤏 双指缩放地图</div>
+                <div class="zoom-tip"></div>
             </div>
             <div style="font-size: 10px; text-align: center; padding: 6px; background:#e3dccb; color:#5b3e23; border-top: 1px solid #cfbc92;">
                 ★ 点击地图上的红色节点/起点/会师标志，重温历史事件与珍贵影像 ★
@@ -466,12 +466,7 @@
 
 <script>
     (function(){
-        // ==================== 节点数据 ====================
-        // 每个节点包含：
-        // - 节点坐标 (x, y) 用于定位节点圆点和SVG路线
-        // - 标签独立坐标 (labelX, labelY) 用于地名标签的绝对定位，与节点坐标完全解耦
-        // 你可以随意修改 labelX / labelY 的值来调整每个标签的显示位置，无需关心节点坐标偏移。
-        // 如果不提供 labelX/labelY，则会回退使用节点坐标，保证标签至少出现在节点附近。
+        
         
         let nodesData = [
             { id: 1, name: "江西瑞金·长征出发", type: "start", x: 775 , y: 604, date: "1934年10月",
@@ -480,7 +475,7 @@
               extra: "出发时携带大量印刷机器和物资，但随后因战斗不断减员。苏区人民为红军编织草鞋、筹集粮食，十里相送，感人肺腑。毛泽东、周恩来、朱德等领导人随军出征。",
               imageUrl: "https://tse3-mm.cn.bing.net/th/id/OIP-C.FVnotqWzkkx8jh1xTQwGvgHaE2?w=262&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",
               imageCaption: "江西瑞金 · 长征出发地",
-              labelX: 773, labelY: 616 },   // 标签独立坐标：右下方
+              labelX: 773, labelY: 616 }, 
             
             { id: 2, name: "湘江战役", type: "common", x: 690, y: 596, date: "1934年11月-12月", 
               desc: "1934年11月27日至12月1日，中央红军在湘江上游广西境内与国民党军苦战五昼夜，突破了第四道封锁线。此役极为惨烈，红军兵力从8.6万余人锐减至3万余人，湘江江水被鲜血染红。", 
@@ -488,7 +483,7 @@
               extra: "当地流传‘三年不饮湘江水，十年不食湘江鱼’，红34师师长陈树湘断肠明志，英雄事迹感天动地。",
               imageUrl: "https://tse3-mm.cn.bing.net/th/id/OIP-C.7fj81vf6RIoSN0az5xekcgHaFN?w=226&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
               imageCaption: "湘江战役 · 悲壮史诗",
-              labelX: 688, labelY: 564 },   // 独立坐标，偏右下方
+              labelX: 688, labelY: 564 },  
 
             { id: 3, name: "遵义会议", type: "common", x: 605, y: 566, date: "1935年1月", 
               desc: "1935年1月15日至17日，中共中央政治局在贵州遵义召开扩大会议。会议集中解决了当时具有决定意义的军事和组织问题，批评了博古、李德的错误指挥，增选毛泽东为政治局常委。", 
@@ -496,7 +491,7 @@
               extra: "会议后确立了毛泽东在红军和党中央的领导地位，独立自主地解决中国革命问题，是马克思主义中国化的里程碑。",
               imageUrl: "https://tse2-mm.cn.bing.net/th/id/OIP-C.45tZhlueI9NffbX7aQka4gHaFK?w=246&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
               imageCaption: "遵义会议 · 伟大转折",
-              labelX: 600, labelY: 574 },   // 略微偏右上，避免遮挡节点
+              labelX: 600, labelY: 574 },  
 
             { id: 4, name: "四渡赤水", type: "common", x: 589, y: 552, date: "1935年1-4月", 
               desc: "1935年1月29日至4月初，毛泽东指挥中央红军在赤水河两岸来回穿插，灵活机动，三个月内六次渡河，彻底摆脱了数十万敌军的围追堵截。", 
@@ -504,7 +499,7 @@
               extra: "一渡赤水避敌锋芒，二渡赤水再占遵义，三渡佯动调敌西进，四渡奇兵南渡乌江，堪称战争史上的经典。",
               imageUrl: "https://tse2-mm.cn.bing.net/th/id/OIP-C.zpXGz_OGPn7DRRoA0pqeCgHaFI?w=268&h=186&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
               imageCaption: "四渡赤水 · 出奇制胜",
-              labelX: 590, labelY: 525 },   // 独立坐标，左偏下
+              labelX: 590, labelY: 525 },  
 
             { id: 5, name: "巧渡金沙江", type: "common", x: 518, y: 587, date: "1935年5月", 
               desc: "1935年5月3日至9日，红军主力在皎平渡利用7只小船，在37名船工帮助下，连续摆渡七天七夜，3万余红军全部渡过金沙江，跳出了敌军包围圈。", 
@@ -512,7 +507,7 @@
               extra: "红军纪律严明，船工们深受感动，主动帮助摆渡。刘伯承亲临渡口指挥，创造了‘一天一夜渡万人’的奇迹。",
               imageUrl: "https://tse1-mm.cn.bing.net/th/id/OIP-C.0sA7f4dq-j274G-SmbhbOgHaEl?w=271&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
               imageCaption: "巧渡金沙江 · 跳出包围圈",
-              labelX: 512, labelY: 594 },   // 偏右下
+              labelX: 512, labelY: 594 },  
 
             { id: 6, name: "飞夺泸定桥", type: "common", x: 509, y: 514, date: "1935年5月", 
               desc: "1935年5月29日，红四团战士冒着敌人密集火力，攀爬13根铁索，与东岸部队合击，仅用2小时就夺取了泸定桥，粉碎了蒋介石让红军成为‘石达开第二’的企图。", 
@@ -520,7 +515,7 @@
               extra: "22名突击勇士手持冲锋枪或短枪，背挂马刀，腰缠手榴弹，在铁索上匍匐前进，创造了战争史上的奇迹。",
               imageUrl: "https://tse1-mm.cn.bing.net/th/id/OIP-C.0CyWsHKU99s2Hg0_Wt1BOAHaFX?w=258&h=187&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
               imageCaption: "飞夺泸定桥 · 天险雄关",
-              labelX: 416, labelY: 501 },   // 右下方一点
+              labelX: 416, labelY: 501 },   
 
             { id: 7, name: "懋功会师", type: "common", x: 529, y: 487, date: "1935年6月", 
               desc: "1935年6月12日，中央红军先头部队翻越长征途中第一座大雪山夹金山，在四川懋功与红四方面军胜利会师。", 
@@ -528,7 +523,7 @@
               extra: "两军将士紧紧握手，热泪盈眶，革命情谊深厚。但随后因张国焘分裂活动，红军面临新的挑战。",
               imageUrl: "https://tse2-mm.cn.bing.net/th/id/OIP-C.9VE7wCBnm8jDpWLMbHRaRAHaE9?w=244&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
               imageCaption: "懋功会师 · 红一方面军与红四方面军会师",
-              labelX: 538, labelY: 475 },   // 独立坐标，右下
+              labelX: 538, labelY: 475 },  
 
             { id: 8, name: "过松潘草地", type: "common", x: 523, y: 460, date: "1935年8月", 
               desc: "1935年8月21日，红军右路军进入松潘草地。数百公里的沼泽地，气候恶劣，缺衣少粮，战士们以野菜、草根、皮带充饥，无数英烈长眠草地。", 
@@ -536,7 +531,7 @@
               extra: "许多战士陷入泥潭，牺牲前仍把干粮留给战友。‘金色鱼钩’的故事就发生在此，体现了红军官兵一致、舍己为人的高尚品德。",
               imageUrl: "https://tse3-mm.cn.bing.net/th/id/OIP-C.HzyDtEirRQkOOxhiBDOQJAHaD6?w=324&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
               imageCaption: "过松潘草地 · 极限挑战",
-              labelX: 427, labelY: 447 },   // 独立坐标，右下方
+              labelX: 427, labelY: 447 },  
 
             { id: 9, name: "腊子口战役", type: "common", x: 554, y: 435, date: "1935年9月", 
               desc: "1935年9月16日，红一方面军突破天险腊子口。腊子口是川西通往甘肃的咽喉，地势险要。红军以正面强攻与迂回奇袭相结合的战术，一举攻克天险。", 
@@ -544,7 +539,7 @@
               extra: "苗族小战士‘云贵川’带领突击队攀上绝壁，从上往下投掷手榴弹，奇袭成功，被誉为‘神兵天降’。",
               imageUrl: "https://tse4-mm.cn.bing.net/th/id/OIP-C.uOQImqqsN7DU5V_icYS-LgHaFj?w=219&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
               imageCaption: "腊子口战役 · 天险破敌",
-              labelX: 562, labelY: 433 },   // 偏右下
+              labelX: 562, labelY: 433 },   
 
             { id: 10, name: "吴起镇会师", type: "common", x: 635, y: 376, date: "1935年10月", 
               desc: "1935年10月19日，中央红军抵达陕甘革命根据地吴起镇，与陕北红军会师，结束了红一方面军的长征。", 
@@ -552,7 +547,7 @@
               extra: "毛泽东在此总结: ‘长征是宣言书，长征是宣传队，长征是播种机。’并指挥了‘切尾巴’战役，击退追敌。",
               imageUrl: "https://tse1-mm.cn.bing.net/th/id/OIP-C.jpGPRf4EqtWgWZAMUfH6lgHaId?w=147&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",  
               imageCaption: "吴起镇会师 · 落脚陕北",
-              labelX: 644, labelY: 357 },   // 独立坐标，右下
+              labelX: 644, labelY: 357 },   
 
             { id: 11, name: "会宁大会师", type: "meeting", x: 583, y: 407, date: "1936年10月", 
               desc: "1936年10月，红一、二、四方面军在甘肃会宁和将台堡会师，标志着红军长征胜利结束。三军将士欢呼雀跃，完成了震撼世界的战略大转移。", 
@@ -560,7 +555,7 @@
               extra: "会宁会师时，红一方面军准备了大量物资慰问兄弟部队。‘三军过后尽开颜’，长征精神永载史册。",
               imageUrl: "https://tse2-mm.cn.bing.net/th/id/OIP-C.SKwQZMek7VKI5k3Aw1owXAHaEJ?w=284&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",  
               imageCaption: "会宁大会师 · 三军开颜",
-              labelX: 490, labelY: 384 }    // 独立坐标，右下方避免遮挡会师星标
+              labelX: 490, labelY: 384 }    
         ];
 
         const WORLD_W = 1200;
@@ -642,7 +637,7 @@
         function renderNodesAndLabels() {
             nodesContainer.innerHTML = '';
             nodesData.forEach(node => {
-                // 1. 创建节点圆点标记（可点击，展示详情）
+                // 1. 创建节点圆点标记
                 const nodeDiv = document.createElement('div');
                 nodeDiv.className = `map-node node-${node.type}`;
                 nodeDiv.setAttribute('data-id', node.id);
@@ -656,8 +651,7 @@
                 });
                 nodesContainer.appendChild(nodeDiv);
                 
-                // 2. 创建地名标签：使用独立的 labelX / labelY 坐标（绝对定位，不与节点绑定）
-                // 如果节点没有定义 labelX/labelY，则回退使用节点坐标（确保标签至少出现）
+                // 2. 创建地名标签
                 const labelX = (node.labelX !== undefined) ? node.labelX : node.x;
                 const labelY = (node.labelY !== undefined) ? node.labelY : node.y;
                 const labelDiv = document.createElement('div');
@@ -666,12 +660,12 @@
                 labelDiv.style.left = labelX + 'px';
                 labelDiv.style.top = labelY + 'px';
                 
-                // 为“会宁大会师”、“过松潘草地”、“飞夺泸定桥”三个标签添加右侧橙色竖线的类
+                
                 if (node.name === "会宁大会师" || node.name === "过松潘草地" || node.name === "飞夺泸定桥") {
                     labelDiv.classList.add('node-label-right-accent');
                 }
                 
-                // 标签不可点击（pointer-events: none 已由CSS保证）
+            
                 nodesContainer.appendChild(labelDiv);
             });
         }
@@ -810,7 +804,7 @@
 
         function init() {
             drawSVGRoute();
-            renderNodesAndLabels();   // 使用独立标签坐标渲染，并针对特定标签添加右侧橙色竖线类
+            renderNodesAndLabels();   
             const firstNode = nodesData[0];
             showEventDetail(firstNode);
             updateSideImage(firstNode);
