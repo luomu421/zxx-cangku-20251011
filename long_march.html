@@ -184,11 +184,11 @@
             box-shadow: 0 0 0 3px #ffd966;
         }
 
-        /* 手机端点击特效 —— 明显放大 + 金色光晕 + 外圈脉冲 */
+        /* 手机端点击特效 —— 适度缩放 + 金色光晕，大小刚好可见 */
         .map-node.touch-active {
-            transform: translate(-50%, -50%) scale(1.65) !important;
-            filter: drop-shadow(0 0 12px gold) brightness(1.2);
-            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.9), 0 0 0 6px rgba(255, 200, 0, 0.4);
+            transform: translate(-50%, -50%) scale(1.3) !important;
+            filter: drop-shadow(0 0 8px gold) brightness(1.15);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.8), 0 0 0 4px rgba(255, 200, 0, 0.3);
             transition: transform 0.08s ease-out, filter 0.08s ease-out;
         }
         
@@ -223,6 +223,10 @@
                 line-height: 1.2;
                 max-width: 110px;
                 text-align: center;
+            }
+            /* 手机上特效缩放稍微再小一点，保持协调 */
+            .map-node.touch-active {
+                transform: translate(-50%, -50%) scale(1.28) !important;
             }
         }
 
@@ -414,16 +418,10 @@
             .panel-header h2 {
                 font-size: 1rem;
             }
-            .node-common, .node-start, .node-meeting {
-                transition: none;
-            }
             .zoom-tip {
                 bottom: 8px;
                 right: 10px;
                 font-size: 9px;
-            }
-            .map-node.touch-active {
-                transform: translate(-50%, -50%) scale(1.7) !important;
             }
         }
     </style>
@@ -641,7 +639,6 @@
             routeSvg.appendChild(mainPath);
         }
 
-        // 统一处理节点点击特效 + 更新内容
         function activateNode(node, nodeDiv, event) {
             if (event && event.cancelable) {
                 event.stopPropagation();
@@ -649,12 +646,12 @@
             }
             if (nodeDiv._timer) clearTimeout(nodeDiv._timer);
             nodeDiv.classList.remove('touch-active');
-            void nodeDiv.offsetHeight; // 强制重绘确保动画重新触发
+            void nodeDiv.offsetHeight; 
             nodeDiv.classList.add('touch-active');
             nodeDiv._timer = setTimeout(() => {
                 nodeDiv.classList.remove('touch-active');
                 delete nodeDiv._timer;
-            }, 220);
+            }, 200);
             showEventDetail(node);
             updateSideImage(node);
         }
@@ -669,11 +666,9 @@
                 nodeDiv.style.left = node.x + 'px';
                 nodeDiv.style.top = node.y + 'px';
                 
-                // 移动端触摸事件 (确保特效 + 内容更新)
                 nodeDiv.addEventListener('touchstart', (e) => {
                     activateNode(node, nodeDiv, e);
                 });
-                // PC端鼠标点击事件 (也加上特效，保持体验一致)
                 nodeDiv.addEventListener('click', (e) => {
                     activateNode(node, nodeDiv, e);
                 });
