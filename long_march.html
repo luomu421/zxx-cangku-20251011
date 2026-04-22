@@ -150,7 +150,7 @@
             cursor: pointer;
             transform: translate(-50%, -50%) scale(1);
             z-index: 12;
-            transition: transform 0.1s ease, filter 0.1s;
+            transition: transform 0.12s cubic-bezier(0.2, 1.2, 0.4, 1), filter 0.12s ease, box-shadow 0.12s ease;
             -webkit-tap-highlight-color: transparent;
         }
         .map-node:hover {
@@ -184,10 +184,12 @@
             box-shadow: 0 0 0 3px #ffd966;
         }
 
+        /* 手机端点击特效 —— 明显放大 + 金色光晕 + 外圈脉冲 */
         .map-node.touch-active {
-            transform: translate(-50%, -50%) scale(1.35);
-            filter: drop-shadow(0 0 10px gold);
-            transition: transform 0.05s ease, filter 0.05s ease;
+            transform: translate(-50%, -50%) scale(1.65) !important;
+            filter: drop-shadow(0 0 12px gold) brightness(1.2);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.9), 0 0 0 6px rgba(255, 200, 0, 0.4);
+            transition: transform 0.08s ease-out, filter 0.08s ease-out;
         }
         
         .node-label {
@@ -420,6 +422,9 @@
                 right: 10px;
                 font-size: 9px;
             }
+            .map-node.touch-active {
+                transform: translate(-50%, -50%) scale(1.7) !important;
+            }
         }
     </style>
 </head>
@@ -636,6 +641,24 @@
             routeSvg.appendChild(mainPath);
         }
 
+        // 统一处理节点点击特效 + 更新内容
+        function activateNode(node, nodeDiv, event) {
+            if (event && event.cancelable) {
+                event.stopPropagation();
+                if (event.type === 'touchstart') event.preventDefault();
+            }
+            if (nodeDiv._timer) clearTimeout(nodeDiv._timer);
+            nodeDiv.classList.remove('touch-active');
+            void nodeDiv.offsetHeight; // 强制重绘确保动画重新触发
+            nodeDiv.classList.add('touch-active');
+            nodeDiv._timer = setTimeout(() => {
+                nodeDiv.classList.remove('touch-active');
+                delete nodeDiv._timer;
+            }, 220);
+            showEventDetail(node);
+            updateSideImage(node);
+        }
+
         function renderNodesAndLabels() {
             nodesContainer.innerHTML = '';
             nodesData.forEach(node => {
@@ -645,24 +668,16 @@
                 nodeDiv.setAttribute('title', node.name);
                 nodeDiv.style.left = node.x + 'px';
                 nodeDiv.style.top = node.y + 'px';
-                nodeDiv.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showEventDetail(node);
-                    updateSideImage(node);
-                });
+                
+                // 移动端触摸事件 (确保特效 + 内容更新)
                 nodeDiv.addEventListener('touchstart', (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    if (nodeDiv._timer) clearTimeout(nodeDiv._timer);
-                    nodeDiv.classList.remove('touch-active');
-                    nodeDiv.classList.add('touch-active');
-                    nodeDiv._timer = setTimeout(() => {
-                        nodeDiv.classList.remove('touch-active');
-                        delete nodeDiv._timer;
-                    }, 150);
-                    showEventDetail(node);
-                    updateSideImage(node);
+                    activateNode(node, nodeDiv, e);
                 });
+                // PC端鼠标点击事件 (也加上特效，保持体验一致)
+                nodeDiv.addEventListener('click', (e) => {
+                    activateNode(node, nodeDiv, e);
+                });
+                
                 nodesContainer.appendChild(nodeDiv);
                 
                 const labelX = (node.labelX !== undefined) ? node.labelX : node.x;
