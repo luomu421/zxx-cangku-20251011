@@ -1,16 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>红军长征·伟大征程</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>红军长征·伟大征程 | 交互式地图（标签独立坐标）</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
+            user-select: none; /* 避免移动端长按菜单，不影响交互 */
         }
 
         body {
@@ -21,7 +20,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 24px;
+            padding: 16px;
         }
 
         .app-container {
@@ -37,44 +36,44 @@
 
         .hero {
             text-align: center;
-            padding: 24px 24px 18px;
+            padding: 20px 20px 14px;
             background: linear-gradient(135deg, #9e3737, #732222);
             color: #fff3e0;
             border-bottom: 4px solid #f3bc6c;
         }
 
         .hero h1 {
-            font-size: 2.3rem;
+            font-size: 2rem;
             font-weight: 800;
             letter-spacing: 1px;
             text-shadow: 2px 2px 0 #401a1a;
         }
 
         .hero p {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             margin-top: 6px;
             opacity: 0.92;
         }
 
         .hero .sub {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             background: #4f2020aa;
             display: inline-block;
             padding: 4px 18px;
             border-radius: 50px;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .dual-layout {
             display: flex;
             flex-wrap: wrap;
-            gap: 24px;
-            padding: 24px;
+            gap: 20px;
+            padding: 20px;
         }
 
         .fullmap-container {
             flex: 1.6;
-            min-width: 580px;
+            min-width: 280px;
             background: #d9cdb0;
             border-radius: 36px;
             box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
@@ -87,9 +86,9 @@
         .fullmap-container .map-title {
             background: #5f3b1c;
             color: #ffefcf;
-            padding: 12px 16px;
+            padding: 10px 16px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
             text-align: center;
             letter-spacing: 1px;
         }
@@ -98,15 +97,15 @@
             position: relative;
             overflow: hidden;
             background: #e9e2cf;
-            height: 65vh;
-            min-height: 520px;
+            height: 58vh;
+            min-height: 460px;
+            touch-action: none;
             cursor: grab;
         }
         .map-viewport:active {
             cursor: grabbing;
         }
 
-        /* 核心变换层：背景、SVG路线、节点容器三者完全锁死在同一坐标系统下 */
         .map-transform {
             position: absolute;
             top: 0;
@@ -126,7 +125,6 @@
             user-select: none;
         }
 
-        /* SVG路线层 */
         .route-svg {
             position: absolute;
             top: 0;
@@ -137,7 +135,6 @@
             z-index: 5;
         }
 
-        /* 节点容器 */
         .nodes-container {
             position: absolute;
             top: 0;
@@ -151,8 +148,9 @@
             position: absolute;
             cursor: pointer;
             transform: translate(-50%, -50%);
-            z-index: 10;
+            z-index: 12;
             transition: transform 0.1s ease, filter 0.1s;
+            -webkit-tap-highlight-color: transparent;
         }
         .map-node:hover {
             transform: translate(-50%, -50%) scale(1.2);
@@ -185,12 +183,47 @@
             box-shadow: 0 0 0 3px #ffd966;
         }
 
+        /* 地名标签样式 - 完全独立坐标，不可点击，背景透明度提高（更透明） */
+        .node-label {
+            position: absolute;
+            white-space: nowrap;
+            background: rgba(30, 20, 12, 0.55);   /* 提高透明度：从0.85降至0.55，更透地图背景 */
+            backdrop-filter: blur(4px);
+            color: #fef3d6;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 24px;
+            border-left: 3px solid #f3bc6c;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            pointer-events: none;   /* 完全不可点击，避免干扰节点交互 */
+            font-family: 'Inter', system-ui, sans-serif;
+            z-index: 13;
+            transition: none;
+        }
+        /* 针对三个特定标签：将左侧橙色竖线改为右侧 */
+        .node-label-right-accent {
+            border-left: none !important;
+            border-right: 3px solid #f3bc6c !important;
+        }
+        @media (max-width: 780px) {
+            .node-label {
+                font-size: 10px;
+                padding: 3px 8px;
+                white-space: normal;
+                line-height: 1.2;
+                max-width: 110px;
+                text-align: center;
+            }
+        }
+
         .right-area {
             flex: 1;
-            min-width: 340px;
+            min-width: 300px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
         .info-panel {
@@ -206,38 +239,37 @@
 
         .panel-header {
             background: linear-gradient(95deg, #b96b2c, #a3541f);
-            padding: 14px 20px;
+            padding: 12px 18px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             color: white;
         }
-        .panel-header .icon { font-size: 26px; }
-        .panel-header h2 { font-size: 1.3rem; font-weight: 600; }
+        .panel-header .icon { font-size: 24px; }
+        .panel-header h2 { font-size: 1.2rem; font-weight: 600; }
 
         .panel-content {
-            padding: 20px;
-            min-height: 300px;
-            max-height: 65vh;
+            padding: 18px;
+            min-height: 280px;
+            max-height: 62vh;
             overflow-y: auto;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
-        /* 图片展示区域 - 随节点切换 */
         .image-gallery {
             background: #f7efdf;
             border-radius: 24px;
-            padding: 16px;
+            padding: 14px;
             text-align: center;
             box-shadow: inset 0 0 0 1px #fff8e8, 0 6px 12px rgba(0,0,0,0.05);
         }
         .image-gallery h3 {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #853a1a;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -249,7 +281,7 @@
             overflow: hidden;
             background: #d9cdb0;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            min-height: 180px;
+            min-height: 170px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -260,23 +292,23 @@
             display: block;
             transition: transform 0.2s;
             object-fit: cover;
-            max-height: 260px;
+            max-height: 240px;
         }
         .image-gallery img:hover {
             transform: scale(1.02);
         }
         .image-caption {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #7a5a3a;
-            margin-top: 10px;
+            margin-top: 8px;
             font-style: italic;
         }
         .image-placeholder {
             width: 100%;
-            padding: 40px 20px;
+            padding: 36px 16px;
             background: #e9dfcc;
             color: #8b6946;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-align: center;
             border-radius: 16px;
         }
@@ -285,41 +317,41 @@
             animation: fadeSlide 0.25s ease;
             background: #fffef7;
             border-radius: 24px;
-            padding: 16px;
+            padding: 14px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.03);
             border: 1px solid #f0e2ce;
         }
         .event-detail h3 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: #853a1a;
             border-left: 6px solid #cd6f32;
-            padding-left: 14px;
-            margin-bottom: 12px;
+            padding-left: 12px;
+            margin-bottom: 10px;
         }
         .event-detail .date {
             background: #f0e0c8;
             display: inline-block;
             padding: 4px 14px;
             border-radius: 40px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #73451f;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
-        .event-detail p { line-height: 1.6; color: #2c241a; font-size: 0.95rem; margin-bottom: 12px; text-align: justify; }
+        .event-detail p { line-height: 1.5; color: #2c241a; font-size: 0.9rem; margin-bottom: 10px; text-align: justify; }
         .event-detail .significance {
             background: #faf0e0;
-            padding: 12px;
+            padding: 10px;
             border-radius: 20px;
             border-left: 3px solid #c47436;
-            margin-top: 8px;
+            margin-top: 6px;
         }
         .extra-detail {
             background: #fff7e8;
             padding: 10px;
             border-radius: 16px;
-            margin-top: 12px;
-            font-size: 0.9rem;
+            margin-top: 10px;
+            font-size: 0.85rem;
         }
 
         @keyframes fadeSlide {
@@ -331,29 +363,57 @@
             background: #31261b;
             color: #e7d7b4;
             text-align: center;
-            padding: 12px;
-            font-size: 0.7rem;
+            padding: 10px;
+            font-size: 0.65rem;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            padding-left: 28px;
-            padding-right: 28px;
+            padding-left: 20px;
+            padding-right: 20px;
             border-top: 1px solid #dbba87;
         }
 
         .zoom-tip {
             position: absolute;
             bottom: 12px;
-            right: 20px;
-            background: rgba(0,0,0,0.65);
+            right: 16px;
+            background: rgba(0,0,0,0.7);
             color: #ffefcf;
-            padding: 4px 12px;
-            border-radius: 24px;
-            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 28px;
+            font-size: 10px;
             pointer-events: none;
             z-index: 20;
             font-weight: 500;
             backdrop-filter: blur(4px);
+        }
+        
+        @media (max-width: 780px) {
+            .dual-layout {
+                gap: 16px;
+                padding: 16px;
+            }
+            .fullmap-container .map-title {
+                font-size: 0.85rem;
+            }
+            .map-viewport {
+                height: 52vh;
+                min-height: 380px;
+            }
+            .hero h1 {
+                font-size: 1.6rem;
+            }
+            .panel-header h2 {
+                font-size: 1rem;
+            }
+            .node-common, .node-start, .node-meeting {
+                transition: none;
+            }
+            .zoom-tip {
+                bottom: 8px;
+                right: 10px;
+                font-size: 9px;
+            }
         }
     </style>
 </head>
@@ -361,28 +421,25 @@
 <div class="app-container">
     <header class="hero">
         <h1>红军长征 · 伟大征程</h1>
-        <p>1934年10月 — 1936年10月 </p>
-        <p class="sub">🟢 绿色旗帜(起点) | ⭐ 金色五角星(会师) | 🔴 红色圆点(事件) </p>
+        <p>1934年10月 — 1936年10月</p>
+        <p class="sub">🟢 绿色旗帜(起点) | ⭐ 金色五角星(会师) | 🔴 红色圆点(事件) | 🏷️ 地名标签独立坐标（可任意调节）</p>
     </header>
 
     <div class="dual-layout">
         <div class="fullmap-container">
-            <div class="map-title">红军长征路线图 </div>
+            <div class="map-title">红军长征路线图 · 可拖拽缩放 | 每个地名标签均使用独立绝对坐标（labelX, labelY）</div>
             <div id="mapViewport" class="map-viewport">
                 <div id="mapTransform" class="map-transform">
-                    <!-- 背景地图，固定尺寸1200x800 -->
                     <img id="mapBg" class="map-bg" src="https://ts1.tc.mm.bing.net/th/id/R-C.36a6785e14890836d72f0c1ed4a854b5?rik=c%2f0tWrOG2MsYXA&riu=http%3a%2f%2fpic.shbdl.com%2fuploads%2fallimg%2f250226%2f1-2502260T635151.jpg&ehk=ERHAtedNr5vdPx2JEvLVnQ7ZTv8sx%2fviEbWBh2%2bSBSM%3d&risl=&pid=ImgRaw&r=0" alt="长征地图背景" crossorigin="anonymous">
                     
-                    <!-- SVG路线层 -->
                     <svg id="routeSvg" class="route-svg" viewBox="0 0 1200 800" preserveAspectRatio="none"></svg>
                     
-                    <!-- 节点容器 -->
                     <div id="nodesContainer" class="nodes-container"></div>
                 </div>
-                <div class="zoom-tip">🔍 滚轮缩放 | 拖拽平移地图 | 点击节点进行查看</div>
+                <div class="zoom-tip">✋ 单指拖拽 | 🤏 双指缩放地图</div>
             </div>
-            <div style="font-size: 11px; text-align: center; padding: 8px; background:#e3dccb; color:#5b3e23; border-top: 1px solid #cfbc92;">
-                ★ 节点坐标即为路线关键点 | 点击节点查看历史详情及对应图片 ★
+            <div style="font-size: 10px; text-align: center; padding: 6px; background:#e3dccb; color:#5b3e23; border-top: 1px solid #cfbc92;">
+                ★ 点击地图上的红色节点/起点/会师标志，重温历史事件与珍贵影像 ★
             </div>
         </div>
 
@@ -390,18 +447,15 @@
             <div class="info-panel">
                 <div class="panel-header"><span class="icon">📜</span><h2>长征记忆 · 影像珍藏</h2></div>
                 <div class="panel-content" id="panelContent">
-                    <!-- 图片展示区域，会随节点切换 -->
                     <div class="image-gallery" id="imageGallery">
                         <h3>⭐ 伟大征程 · 历史瞬间 ⭐</h3>
                         <div id="imageContainer" class="image-container">
-                            <!-- 动态填充图片 -->
-                            <div class="image-placeholder">⚡ 请点击左侧节点加载图片 ⚡</div>
+                            <div class="image-placeholder">⚡ 请点击左侧地图中的节点标志加载详情 ⚡</div>
                         </div>
                         <div id="imageCaption" class="image-caption"></div>
                     </div>
-                    <!-- 历史详情区域 -->
                     <div id="eventDetailArea" class="event-detail-placeholder">
-                        <div class="placeholder" style="text-align:center; color:#b68b60; padding:20px;">⭐ 点击左侧地图中的节点查看详细历史</div>
+                        <div class="placeholder" style="text-align:center; color:#b68b60; padding:20px;">⭐ 点击地图节点标志，重温峥嵘岁月 ⭐</div>
                     </div>
                 </div>
             </div>
@@ -412,85 +466,101 @@
 
 <script>
     (function(){
-
         // ==================== 节点数据 ====================
+        // 每个节点包含：
+        // - 节点坐标 (x, y) 用于定位节点圆点和SVG路线
+        // - 标签独立坐标 (labelX, labelY) 用于地名标签的绝对定位，与节点坐标完全解耦
+        // 你可以随意修改 labelX / labelY 的值来调整每个标签的显示位置，无需关心节点坐标偏移。
+        // 如果不提供 labelX/labelY，则会回退使用节点坐标，保证标签至少出现在节点附近。
+        
         let nodesData = [
             { id: 1, name: "江西瑞金·长征出发", type: "start", x: 775 , y: 604, date: "1934年10月",
               desc: "1934年10月10日晚，中共中央、中革军委率领中央红军主力5个军团及中央、军委机关直属部队共8.6万余人，从江西瑞金、于都等地出发，开始战略转移。军民洒泪告别，夜渡贡水，踏上漫漫征途。", 
               significance: "标志着伟大长征的开始，保存了革命火种，开启了两万五千里的战略大转移，是中国革命转危为安的关键起点。", 
               extra: "出发时携带大量印刷机器和物资，但随后因战斗不断减员。苏区人民为红军编织草鞋、筹集粮食，十里相送，感人肺腑。毛泽东、周恩来、朱德等领导人随军出征。",
               imageUrl: "https://tse3-mm.cn.bing.net/th/id/OIP-C.FVnotqWzkkx8jh1xTQwGvgHaE2?w=262&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",
-              imageCaption: "江西瑞金 · 长征出发地" },
-           
+              imageCaption: "江西瑞金 · 长征出发地",
+              labelX: 773, labelY: 616 },   // 标签独立坐标：右下方
+            
             { id: 2, name: "湘江战役", type: "common", x: 690, y: 596, date: "1934年11月-12月", 
               desc: "1934年11月27日至12月1日，中央红军在湘江上游广西境内与国民党军苦战五昼夜，突破了第四道封锁线。此役极为惨烈，红军兵力从8.6万余人锐减至3万余人，湘江江水被鲜血染红。", 
               significance: "极其惨烈的战役，暴露了‘左’倾错误指挥的危害，促使广大指战员反思，为遵义会议的召开奠定了思想基础。", 
               extra: "当地流传‘三年不饮湘江水，十年不食湘江鱼’，红34师师长陈树湘断肠明志，英雄事迹感天动地。",
               imageUrl: "https://tse3-mm.cn.bing.net/th/id/OIP-C.7fj81vf6RIoSN0az5xekcgHaFN?w=226&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
-              imageCaption: "湘江战役 · 悲壮史诗" },
+              imageCaption: "湘江战役 · 悲壮史诗",
+              labelX: 688, labelY: 564 },   // 独立坐标，偏右下方
 
             { id: 3, name: "遵义会议", type: "common", x: 605, y: 566, date: "1935年1月", 
               desc: "1935年1月15日至17日，中共中央政治局在贵州遵义召开扩大会议。会议集中解决了当时具有决定意义的军事和组织问题，批评了博古、李德的错误指挥，增选毛泽东为政治局常委。", 
               significance: "挽救了党，挽救了红军，挽救了中国革命，是中国共产党历史上生死攸关的转折点，标志着中国共产党从幼年走向成熟。", 
               extra: "会议后确立了毛泽东在红军和党中央的领导地位，独立自主地解决中国革命问题，是马克思主义中国化的里程碑。",
               imageUrl: "https://tse2-mm.cn.bing.net/th/id/OIP-C.45tZhlueI9NffbX7aQka4gHaFK?w=246&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
-              imageCaption: "遵义会议 · 伟大转折" },
+              imageCaption: "遵义会议 · 伟大转折",
+              labelX: 600, labelY: 574 },   // 略微偏右上，避免遮挡节点
 
             { id: 4, name: "四渡赤水", type: "common", x: 589, y: 552, date: "1935年1-4月", 
               desc: "1935年1月29日至4月初，毛泽东指挥中央红军在赤水河两岸来回穿插，灵活机动，三个月内六次渡河，彻底摆脱了数十万敌军的围追堵截。", 
               significance: "毛泽东军事生涯的‘得意之笔’，展现了运动战的高超指挥艺术，是红军长征史上以少胜多、变被动为主动的光辉战例。", 
               extra: "一渡赤水避敌锋芒，二渡赤水再占遵义，三渡佯动调敌西进，四渡奇兵南渡乌江，堪称战争史上的经典。",
               imageUrl: "https://tse2-mm.cn.bing.net/th/id/OIP-C.zpXGz_OGPn7DRRoA0pqeCgHaFI?w=268&h=186&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
-              imageCaption: "四渡赤水 · 出奇制胜" },
+              imageCaption: "四渡赤水 · 出奇制胜",
+              labelX: 590, labelY: 525 },   // 独立坐标，左偏下
 
             { id: 5, name: "巧渡金沙江", type: "common", x: 518, y: 587, date: "1935年5月", 
               desc: "1935年5月3日至9日，红军主力在皎平渡利用7只小船，在37名船工帮助下，连续摆渡七天七夜，3万余红军全部渡过金沙江，跳出了敌军包围圈。", 
               significance: "彻底摆脱了国民党军的围追堵截，取得了战略主动权，粉碎了蒋介石围歼红军于川黔滇边境的企图。", 
               extra: "红军纪律严明，船工们深受感动，主动帮助摆渡。刘伯承亲临渡口指挥，创造了‘一天一夜渡万人’的奇迹。",
               imageUrl: "https://tse1-mm.cn.bing.net/th/id/OIP-C.0sA7f4dq-j274G-SmbhbOgHaEl?w=271&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
-              imageCaption: "巧渡金沙江 · 跳出包围圈" },
+              imageCaption: "巧渡金沙江 · 跳出包围圈",
+              labelX: 512, labelY: 594 },   // 偏右下
 
             { id: 6, name: "飞夺泸定桥", type: "common", x: 509, y: 514, date: "1935年5月", 
               desc: "1935年5月29日，红四团战士冒着敌人密集火力，攀爬13根铁索，与东岸部队合击，仅用2小时就夺取了泸定桥，粉碎了蒋介石让红军成为‘石达开第二’的企图。", 
               significance: "打开了中央红军北上的通道，是长征中具有战略意义的重大胜利之一，展现了红军无坚不摧的革命英雄主义精神。", 
               extra: "22名突击勇士手持冲锋枪或短枪，背挂马刀，腰缠手榴弹，在铁索上匍匐前进，创造了战争史上的奇迹。",
               imageUrl: "https://tse1-mm.cn.bing.net/th/id/OIP-C.0CyWsHKU99s2Hg0_Wt1BOAHaFX?w=258&h=187&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
-              imageCaption: "飞夺泸定桥 · 天险雄关" },
+              imageCaption: "飞夺泸定桥 · 天险雄关",
+              labelX: 416, labelY: 501 },   // 右下方一点
 
             { id: 7, name: "懋功会师", type: "common", x: 529, y: 487, date: "1935年6月", 
               desc: "1935年6月12日，中央红军先头部队翻越长征途中第一座大雪山夹金山，在四川懋功与红四方面军胜利会师。", 
               significance: "增强了红军力量，极大鼓舞了革命士气，为后续共同北上抗日奠定了基础。", 
               extra: "两军将士紧紧握手，热泪盈眶，革命情谊深厚。但随后因张国焘分裂活动，红军面临新的挑战。",
               imageUrl: "https://tse2-mm.cn.bing.net/th/id/OIP-C.9VE7wCBnm8jDpWLMbHRaRAHaE9?w=244&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
-              imageCaption: "懋功会师 · 红一方面军与红四方面军会师" },
+              imageCaption: "懋功会师 · 红一方面军与红四方面军会师",
+              labelX: 538, labelY: 475 },   // 独立坐标，右下
 
             { id: 8, name: "过松潘草地", type: "common", x: 523, y: 460, date: "1935年8月", 
               desc: "1935年8月21日，红军右路军进入松潘草地。数百公里的沼泽地，气候恶劣，缺衣少粮，战士们以野菜、草根、皮带充饥，无数英烈长眠草地。", 
               significance: "展现了人类极限挑战下红军不屈不挠的革命精神，是长征中最艰苦的历程之一。", 
               extra: "许多战士陷入泥潭，牺牲前仍把干粮留给战友。‘金色鱼钩’的故事就发生在此，体现了红军官兵一致、舍己为人的高尚品德。",
               imageUrl: "https://tse3-mm.cn.bing.net/th/id/OIP-C.HzyDtEirRQkOOxhiBDOQJAHaD6?w=324&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
-              imageCaption: "过松潘草地 · 极限挑战" },
+              imageCaption: "过松潘草地 · 极限挑战",
+              labelX: 427, labelY: 447 },   // 独立坐标，右下方
 
             { id: 9, name: "腊子口战役", type: "common", x: 554, y: 435, date: "1935年9月", 
               desc: "1935年9月16日，红一方面军突破天险腊子口。腊子口是川西通往甘肃的咽喉，地势险要。红军以正面强攻与迂回奇袭相结合的战术，一举攻克天险。", 
               significance: "粉碎了敌军企图困死红军的阴谋，打开了红军北上陕甘的通道。", 
               extra: "苗族小战士‘云贵川’带领突击队攀上绝壁，从上往下投掷手榴弹，奇袭成功，被誉为‘神兵天降’。",
               imageUrl: "https://tse4-mm.cn.bing.net/th/id/OIP-C.uOQImqqsN7DU5V_icYS-LgHaFj?w=219&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",   
-              imageCaption: "腊子口战役 · 天险破敌" },
+              imageCaption: "腊子口战役 · 天险破敌",
+              labelX: 562, labelY: 433 },   // 偏右下
 
             { id: 10, name: "吴起镇会师", type: "common", x: 635, y: 376, date: "1935年10月", 
               desc: "1935年10月19日，中央红军抵达陕甘革命根据地吴起镇，与陕北红军会师，结束了红一方面军的长征。", 
               significance: "标志着中央红军长征胜利结束，为党中央把中国革命大本营放在西北奠定了基础。", 
               extra: "毛泽东在此总结: ‘长征是宣言书，长征是宣传队，长征是播种机。’并指挥了‘切尾巴’战役，击退追敌。",
               imageUrl: "https://tse1-mm.cn.bing.net/th/id/OIP-C.jpGPRf4EqtWgWZAMUfH6lgHaId?w=147&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",  
-              imageCaption: "吴起镇会师 · 落脚陕北" },
+              imageCaption: "吴起镇会师 · 落脚陕北",
+              labelX: 644, labelY: 357 },   // 独立坐标，右下
 
             { id: 11, name: "会宁大会师", type: "meeting", x: 583, y: 407, date: "1936年10月", 
               desc: "1936年10月，红一、二、四方面军在甘肃会宁和将台堡会师，标志着红军长征胜利结束。三军将士欢呼雀跃，完成了震撼世界的战略大转移。", 
               significance: "完成了战略大转移，开创了中国革命的新局面，保存了革命骨干力量，铸就了伟大的长征精神。", 
               extra: "会宁会师时，红一方面军准备了大量物资慰问兄弟部队。‘三军过后尽开颜’，长征精神永载史册。",
               imageUrl: "https://tse2-mm.cn.bing.net/th/id/OIP-C.SKwQZMek7VKI5k3Aw1owXAHaEJ?w=284&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",  
-              imageCaption: "会宁大会师 · 三军开颜" }
+              imageCaption: "会宁大会师 · 三军开颜",
+              labelX: 490, labelY: 384 }    // 独立坐标，右下方避免遮挡会师星标
         ];
 
         const WORLD_W = 1200;
@@ -508,78 +578,13 @@
         let transform = { scale: 1, offsetX: 0, offsetY: 0 };
         let isDragging = false;
         let dragStart = { x: 0, y: 0, startOffsetX: 0, startOffsetY: 0 };
+        
+        let touchStartDistance = 0;
+        let touchStartScale = 1;
+        let touchStartCenter = { x: 0, y: 0 };
+        let touchStartOffset = { x: 0, y: 0 };
 
-        // ---------- 更新右侧图片（根据节点）----------
-        function updateSideImage(node) {
-            if (!imageContainer) return;
-            // 如果节点有有效的图片链接，则显示图片；否则显示占位符
-            if (node.imageUrl && node.imageUrl.trim() !== "") {
-                imageContainer.innerHTML = `<img src="${node.imageUrl}" alt="${node.name}" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'image-placeholder\'>⚠️ 图片加载失败，请检查链接</div>';">`;
-            } else {
-                // 预留位置：即使没有图片链接，也显示提示信息，方便用户后续填入链接
-                imageContainer.innerHTML = `<div class="image-placeholder">📷 待补充图片链接<br><span style="font-size:12px;">请在节点数据的 imageUrl 字段中填入图片地址</span></div>`;
-            }
-            // 更新图片说明文字
-            imageCaptionSpan.textContent = node.imageCaption || `${node.name} · 历史影像`;
-        }
-
-        // 绘制SVG路线
-        function drawSVGRoute() {
-
-            if (!routeSvg) return;
-            while (routeSvg.firstChild) {
-                routeSvg.removeChild(routeSvg.firstChild);
-            }
-            if (nodesData.length < 2) return;
-
-            let pointsStr = "";
-            for (let i = 0; i < nodesData.length; i++) {
-                pointsStr += `${nodesData[i].x},${nodesData[i].y} `;
-            }
-            
-            const mainPath = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-            mainPath.setAttribute("points", pointsStr.trim());
-            mainPath.setAttribute("fill", "none");
-            mainPath.setAttribute("stroke", "#c73f1f");
-            mainPath.setAttribute("stroke-width", "5");
-            mainPath.setAttribute("stroke-dasharray", "14, 10");
-            mainPath.setAttribute("stroke-linecap", "round");
-            mainPath.setAttribute("stroke-linejoin", "round");
-            
-            const glowPath = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-            glowPath.setAttribute("points", pointsStr.trim());
-            glowPath.setAttribute("fill", "none");
-            glowPath.setAttribute("stroke", "#ffaa66");
-            glowPath.setAttribute("stroke-width", "2.5");
-            glowPath.setAttribute("stroke-dasharray", "6, 12");
-            glowPath.setAttribute("stroke-linecap", "round");
-            glowPath.setAttribute("stroke-linejoin", "round");
-            
-            routeSvg.appendChild(glowPath);
-            routeSvg.appendChild(mainPath);
-        }
-
-        // 渲染节点
-        function renderNodes() {
-            nodesContainer.innerHTML = '';
-            nodesData.forEach(node => {
-                const nodeDiv = document.createElement('div');
-                nodeDiv.className = `map-node node-${node.type}`;
-                nodeDiv.setAttribute('data-id', node.id);
-                nodeDiv.setAttribute('title', node.name);
-                nodeDiv.style.left = node.x + 'px';
-                nodeDiv.style.top = node.y + 'px';
-                
-                nodeDiv.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showEventDetail(node);
-                    updateSideImage(node);   // 切换节点时同步更新右侧图片
-                });
-                nodesContainer.appendChild(nodeDiv);
-            });
-        }
-
-        // 显示事件详情
+        // 更新右侧详情与图片
         function showEventDetail(node) {
             eventDetailArea.innerHTML = `
                 <div class="event-detail">
@@ -592,24 +597,171 @@
             `;
         }
 
-        // 地图变换
+        function updateSideImage(node) {
+            if (!imageContainer) return;
+            if (node.imageUrl && node.imageUrl.trim() !== "") {
+                imageContainer.innerHTML = `<img src="${node.imageUrl}" alt="${node.name}" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>⚠️ 图片加载失败，请检查链接</div>';">`;
+            } else {
+                imageContainer.innerHTML = `<div class="image-placeholder">📷 待补充图片链接<br><span style="font-size:12px;">请在节点数据的 imageUrl 字段中填入图片地址</span></div>`;
+            }
+            imageCaptionSpan.textContent = node.imageCaption || `${node.name} · 历史影像`;
+        }
+
+        // 绘制SVG路线（使用节点坐标）
+        function drawSVGRoute() {
+            if (!routeSvg) return;
+            while (routeSvg.firstChild) {
+                routeSvg.removeChild(routeSvg.firstChild);
+            }
+            if (nodesData.length < 2) return;
+            let pointsStr = "";
+            for (let i = 0; i < nodesData.length; i++) {
+                pointsStr += `${nodesData[i].x},${nodesData[i].y} `;
+            }
+            const mainPath = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            mainPath.setAttribute("points", pointsStr.trim());
+            mainPath.setAttribute("fill", "none");
+            mainPath.setAttribute("stroke", "#c73f1f");
+            mainPath.setAttribute("stroke-width", "5");
+            mainPath.setAttribute("stroke-dasharray", "14, 10");
+            mainPath.setAttribute("stroke-linecap", "round");
+            mainPath.setAttribute("stroke-linejoin", "round");
+            const glowPath = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            glowPath.setAttribute("points", pointsStr.trim());
+            glowPath.setAttribute("fill", "none");
+            glowPath.setAttribute("stroke", "#ffaa66");
+            glowPath.setAttribute("stroke-width", "2.5");
+            glowPath.setAttribute("stroke-dasharray", "6, 12");
+            glowPath.setAttribute("stroke-linecap", "round");
+            glowPath.setAttribute("stroke-linejoin", "round");
+            routeSvg.appendChild(glowPath);
+            routeSvg.appendChild(mainPath);
+        }
+
+        // 核心渲染：生成节点标记点 + 每个节点旁独立坐标的地名标签
+        function renderNodesAndLabels() {
+            nodesContainer.innerHTML = '';
+            nodesData.forEach(node => {
+                // 1. 创建节点圆点标记（可点击，展示详情）
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = `map-node node-${node.type}`;
+                nodeDiv.setAttribute('data-id', node.id);
+                nodeDiv.setAttribute('title', node.name);
+                nodeDiv.style.left = node.x + 'px';
+                nodeDiv.style.top = node.y + 'px';
+                nodeDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showEventDetail(node);
+                    updateSideImage(node);
+                });
+                nodesContainer.appendChild(nodeDiv);
+                
+                // 2. 创建地名标签：使用独立的 labelX / labelY 坐标（绝对定位，不与节点绑定）
+                // 如果节点没有定义 labelX/labelY，则回退使用节点坐标（确保标签至少出现）
+                const labelX = (node.labelX !== undefined) ? node.labelX : node.x;
+                const labelY = (node.labelY !== undefined) ? node.labelY : node.y;
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'node-label';
+                labelDiv.textContent = node.name;
+                labelDiv.style.left = labelX + 'px';
+                labelDiv.style.top = labelY + 'px';
+                
+                // 为“会宁大会师”、“过松潘草地”、“飞夺泸定桥”三个标签添加右侧橙色竖线的类
+                if (node.name === "会宁大会师" || node.name === "过松潘草地" || node.name === "飞夺泸定桥") {
+                    labelDiv.classList.add('node-label-right-accent');
+                }
+                
+                // 标签不可点击（pointer-events: none 已由CSS保证）
+                nodesContainer.appendChild(labelDiv);
+            });
+        }
+
         function updateTransform() {
             transformDiv.style.transform = `translate(${transform.offsetX}px, ${transform.offsetY}px) scale(${transform.scale})`;
         }
 
+        // 初始地图放大1.2倍，超出视口，必须拖拽滑动才能看全
         function fitMapToView() {
             const rect = viewport.getBoundingClientRect();
-            const scaleX = rect.width / WORLD_W;
-            const scaleY = rect.height / WORLD_H;
-            const fitScale = Math.min(scaleX, scaleY) * 0.95;
-            transform.scale = Math.min(3.0, Math.max(0.5, fitScale));
+            if (rect.width === 0) return;
+            const fullScaleX = rect.width / WORLD_W;
+            const fullScaleY = rect.height / WORLD_H;
+            let baseScale = Math.min(fullScaleX, fullScaleY);
+            let targetScale = baseScale * 1.2;
+            targetScale = Math.min(2.8, Math.max(0.65, targetScale));
+            transform.scale = targetScale;
             transform.offsetX = (rect.width - WORLD_W * transform.scale) / 2;
             transform.offsetY = (rect.height - WORLD_H * transform.scale) / 2;
             updateTransform();
         }
 
-        // 交互：拖拽 + 滚轮缩放
-        function initInteraction() {
+        // ----- 手势交互 （双指缩放+拖拽）-----
+        function getTouchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.hypot(dx, dy);
+        }
+        function getTouchCenter(touches, rect) {
+            const cx = (touches[0].clientX + touches[1].clientX) / 2 - rect.left;
+            const cy = (touches[0].clientY + touches[1].clientY) / 2 - rect.top;
+            return { x: cx, y: cy };
+        }
+        
+        function onTouchStart(e) {
+            e.preventDefault();
+            const rect = viewport.getBoundingClientRect();
+            const touches = Array.from(e.touches);
+            if (touches.length === 1) {
+                isDragging = true;
+                dragStart.x = touches[0].clientX;
+                dragStart.y = touches[0].clientY;
+                dragStart.startOffsetX = transform.offsetX;
+                dragStart.startOffsetY = transform.offsetY;
+            } else if (touches.length === 2) {
+                isDragging = false;
+                touchStartDistance = getTouchDistance(touches);
+                touchStartScale = transform.scale;
+                const center = getTouchCenter(touches, rect);
+                touchStartCenter.x = center.x;
+                touchStartCenter.y = center.y;
+                touchStartOffset.x = transform.offsetX;
+                touchStartOffset.y = transform.offsetY;
+            }
+        }
+        
+        function onTouchMove(e) {
+            e.preventDefault();
+            const rect = viewport.getBoundingClientRect();
+            const touches = Array.from(e.touches);
+            if (touches.length === 1 && isDragging) {
+                const dx = touches[0].clientX - dragStart.x;
+                const dy = touches[0].clientY - dragStart.y;
+                transform.offsetX = dragStart.startOffsetX + dx;
+                transform.offsetY = dragStart.startOffsetY + dy;
+                updateTransform();
+            } else if (touches.length === 2 && touchStartDistance > 0) {
+                const newDistance = getTouchDistance(touches);
+                let scaleFactor = newDistance / touchStartDistance;
+                let newScale = touchStartScale * scaleFactor;
+                newScale = Math.min(3.5, Math.max(0.45, newScale));
+                if (newScale === transform.scale) return;
+                const currentCenter = getTouchCenter(touches, rect);
+                const worldCenterX = (touchStartCenter.x - touchStartOffset.x) / touchStartScale;
+                const worldCenterY = (touchStartCenter.y - touchStartOffset.y) / touchStartScale;
+                transform.scale = newScale;
+                transform.offsetX = currentCenter.x - worldCenterX * newScale;
+                transform.offsetY = currentCenter.y - worldCenterY * newScale;
+                updateTransform();
+            }
+        }
+        
+        function onTouchEnd(e) {
+            e.preventDefault();
+            isDragging = false;
+            touchStartDistance = 0;
+        }
+        
+        function initMouseAndWheel() {
             viewport.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const rect = viewport.getBoundingClientRect();
@@ -618,7 +770,7 @@
                 const oldScale = transform.scale;
                 const delta = e.deltaY > 0 ? 0.88 : 1.12;
                 let newScale = oldScale * delta;
-                newScale = Math.min(3.5, Math.max(0.4, newScale));
+                newScale = Math.min(3.5, Math.max(0.45, newScale));
                 if (newScale === oldScale) return;
                 const worldMouseX = (mouseX - transform.offsetX) / oldScale;
                 const worldMouseY = (mouseY - transform.offsetY) / oldScale;
@@ -648,11 +800,17 @@
             viewport.style.cursor = 'grab';
         }
 
-        // 初始化
+        function initInteraction() {
+            initMouseAndWheel();
+            viewport.addEventListener('touchstart', onTouchStart, { passive: false });
+            viewport.addEventListener('touchmove', onTouchMove, { passive: false });
+            viewport.addEventListener('touchend', onTouchEnd);
+            viewport.addEventListener('touchcancel', onTouchEnd);
+        }
+
         function init() {
-            renderNodes();
             drawSVGRoute();
-            // 默认显示第一个节点（瑞金）的详情和图片
+            renderNodesAndLabels();   // 使用独立标签坐标渲染，并针对特定标签添加右侧橙色竖线类
             const firstNode = nodesData[0];
             showEventDetail(firstNode);
             updateSideImage(firstNode);
@@ -660,7 +818,7 @@
             initInteraction();
             window.addEventListener('resize', () => fitMapToView());
         }
-
+        
         init();
     })();
 </script>
