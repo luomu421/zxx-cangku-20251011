@@ -148,7 +148,7 @@
         .map-node {
             position: absolute;
             cursor: pointer;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(1);
             z-index: 12;
             transition: transform 0.1s ease, filter 0.1s;
             -webkit-tap-highlight-color: transparent;
@@ -184,6 +184,11 @@
             box-shadow: 0 0 0 3px #ffd966;
         }
 
+        .map-node.touch-active {
+            transform: translate(-50%, -50%) scale(1.35);
+            filter: drop-shadow(0 0 10px gold);
+            transition: transform 0.05s ease, filter 0.05s ease;
+        }
         
         .node-label {
             position: absolute;
@@ -570,7 +575,6 @@
         const imageContainer = document.getElementById('imageContainer');
         const imageCaptionSpan = document.getElementById('imageCaption');
 
-        // 地图变换参数
         let transform = { scale: 1, offsetX: 0, offsetY: 0 };
         let isDragging = false;
         let dragStart = { x: 0, y: 0, startOffsetX: 0, startOffsetY: 0 };
@@ -580,7 +584,6 @@
         let touchStartCenter = { x: 0, y: 0 };
         let touchStartOffset = { x: 0, y: 0 };
 
-        // 更新右侧详情与图片
         function showEventDetail(node) {
             eventDetailArea.innerHTML = `
                 <div class="event-detail">
@@ -603,7 +606,6 @@
             imageCaptionSpan.textContent = node.imageCaption || `${node.name} · 历史影像`;
         }
 
-        // 绘制SVG路线（使用节点坐标）
         function drawSVGRoute() {
             if (!routeSvg) return;
             while (routeSvg.firstChild) {
@@ -634,11 +636,9 @@
             routeSvg.appendChild(mainPath);
         }
 
-        // 核心渲染：生成节点标记点 + 每个节点旁独立坐标的地名标签
         function renderNodesAndLabels() {
             nodesContainer.innerHTML = '';
             nodesData.forEach(node => {
-                // 1. 创建节点圆点标记
                 const nodeDiv = document.createElement('div');
                 nodeDiv.className = `map-node node-${node.type}`;
                 nodeDiv.setAttribute('data-id', node.id);
@@ -650,16 +650,21 @@
                     showEventDetail(node);
                     updateSideImage(node);
                 });
-                // 移动端专用触摸事件，确保手机点击精准响应，阻止冒泡和默认行为避免与拖拽冲突
                 nodeDiv.addEventListener('touchstart', (e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    if (nodeDiv._timer) clearTimeout(nodeDiv._timer);
+                    nodeDiv.classList.remove('touch-active');
+                    nodeDiv.classList.add('touch-active');
+                    nodeDiv._timer = setTimeout(() => {
+                        nodeDiv.classList.remove('touch-active');
+                        delete nodeDiv._timer;
+                    }, 150);
                     showEventDetail(node);
                     updateSideImage(node);
                 });
                 nodesContainer.appendChild(nodeDiv);
                 
-                // 2. 创建地名标签
                 const labelX = (node.labelX !== undefined) ? node.labelX : node.x;
                 const labelY = (node.labelY !== undefined) ? node.labelY : node.y;
                 const labelDiv = document.createElement('div');
@@ -668,12 +673,10 @@
                 labelDiv.style.left = labelX + 'px';
                 labelDiv.style.top = labelY + 'px';
                 
-                
                 if (node.name === "会宁大会师" || node.name === "过松潘草地" || node.name === "飞夺泸定桥") {
                     labelDiv.classList.add('node-label-right-accent');
                 }
                 
-            
                 nodesContainer.appendChild(labelDiv);
             });
         }
@@ -682,7 +685,6 @@
             transformDiv.style.transform = `translate(${transform.offsetX}px, ${transform.offsetY}px) scale(${transform.scale})`;
         }
 
-        // 初始地图放大1.2倍，超出视口，必须拖拽滑动才能看全
         function fitMapToView() {
             const rect = viewport.getBoundingClientRect();
             if (rect.width === 0) return;
@@ -697,7 +699,6 @@
             updateTransform();
         }
 
-        // ----- 手势交互 （双指缩放+拖拽）-----
         function getTouchDistance(touches) {
             const dx = touches[0].clientX - touches[1].clientX;
             const dy = touches[0].clientY - touches[1].clientY;
