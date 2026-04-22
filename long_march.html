@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -646,6 +647,13 @@
                 nodeDiv.style.top = node.y + 'px';
                 nodeDiv.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    showEventDetail(node);
+                    updateSideImage(node);
+                });
+                // 移动端专用触摸事件，确保手机点击精准响应，阻止冒泡和默认行为避免与拖拽冲突
+                nodeDiv.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
                     showEventDetail(node);
                     updateSideImage(node);
                 });
